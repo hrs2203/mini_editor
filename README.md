@@ -1,4 +1,6 @@
-# web_package_test
+# mini_editor
+
+AIM : At the end, a plugin to have a mini editor ( for suggestion and comments ) ( preferably like notion )
 
 > Made with create-react-library
 
