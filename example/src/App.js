@@ -1,28 +1,23 @@
-import React from 'react'
+import React, { useState } from 'react'
 
-import { NotionCloneEditor } from 'web_package_test'
+import { NotionCloneEditor, getInitialState, getEditorData } from 'web_package_test'
+
 import 'web_package_test/dist/index.css'
 
 const App = () => {
-  const [pullData, setPullData] = React.useState(false);
-  const [fetchedData, setFetchedData] = React.useState([]);
-
-  React.useEffect(
-    () => {
-      console.log(fetchedData);
-      setPullData(false);
-    }, [ fetchedData ]
-  )
+  const [ourEditor, setOurEditor] = useState(getInitialState);
 
   return (
     <>
       <NotionCloneEditor
-        pullData={pullData}
-        setterFxn={setFetchedData}
+        customEditor={ourEditor}
+        setCustomEditor={setOurEditor}
       />
-      <button onClick={() => {
-        setPullData(true);
-      }}>show data </button>
+      <div style={{ "marginLeft": "10px" }}>
+        <pre>
+          {JSON.stringify(getEditorData(ourEditor), undefined, " ")}
+        </pre>
+      </div>
     </>
   )
 }
