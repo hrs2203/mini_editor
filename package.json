@@ -51,6 +51,7 @@
     "dist"
   ],
   "dependencies": {
-    "draft-js": "^0.11.7"
+    "draft-js": "^0.11.7",
+    "redux": "^4.1.2"
   }
 }

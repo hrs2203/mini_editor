@@ -1,7 +1,8 @@
-import React, { useState } from 'react'
-import { Editor, EditorState, convertToRaw, SelectionState, Modifier, CompositeDecorator } from 'draft-js'
+import React, { useState, useRef, useEffect } from 'react';
+import { Editor, EditorState, convertToRaw, SelectionState, Modifier, CompositeDecorator } from 'draft-js';
 
-export const NotionCloneEditor = ({ isDebug = false }) => {
+
+export const NotionCloneEditor = ({ isDebug = false, pullData = false, setterFxn = () => {}, defaultEntity={} }) => {
   const decorationStratergy = new CompositeDecorator([
     {
       strategy: (contentBlock, callback, contentState) => {
@@ -32,9 +33,15 @@ export const NotionCloneEditor = ({ isDebug = false }) => {
         return <span style={customStyle}>{props.children}</span>
       },
     }
-  ])
+  ]);
 
   const [customEditor, setCustomEditor] = useState(() => EditorState.createEmpty(decorationStratergy));
+  const _editorRef = useRef(null);
+  useEffect(() => {
+    if (pullData === true){
+      setterFxn( getEditorData() )
+    }
+  }, [pullData])
 
   const handelChange = (newEditorState) => {
     setCustomEditor(newEditorState);
@@ -44,6 +51,44 @@ export const NotionCloneEditor = ({ isDebug = false }) => {
     "border": "1px solid black",
     "margin": "10px",
     "padding": "3px"
+  }
+
+  function getEditorData(start = 0, end = -1) {
+    try {
+      const contentState = customEditor.getCurrentContent();
+      let result = [];
+      const blockKeys = contentState.getBlocksAsArray().map(item => item.getKey());
+      for (const ky of blockKeys) {
+        const block = contentState.getBlockForKey(ky);
+        const blockText = block.getText();
+        const textLength = end === -1 ? blockText.length : end;
+        let ind = start;
+        // to mitigate initial whitespaces
+        while ((ind < textLength) && (blockText[ind] === " ")) {
+          ind += 1;
+        }
+        while (ind < textLength) {
+          if ((ind === start) || (blockText[ind - 1] === " ")) {
+            const entKey = block.getEntityAt(ind);
+            let j = ind;
+            while (j < textLength && blockText[j] !== " ") {
+              j += 1
+            }
+            const tWord = blockText.substring(ind, j);
+            if (entKey === null) {
+              result.push({ text: tWord, ...defaultEntity });
+            } else {
+              const ent = contentState.getEntity(entKey);
+              result.push({ text: tWord, ...ent.getData() })
+            }
+          }
+          ind += 1
+        }
+      }
+      return result;
+    } catch (e) {
+      return {}
+    }
   }
 
   const selectUpdate = (changeKeyValues) => {
@@ -140,6 +185,7 @@ export const NotionCloneEditor = ({ isDebug = false }) => {
       </div>
       <br />
       <Editor
+        ref={_editorRef}
         editorState={customEditor}
         onChange={handelChange}
       />
